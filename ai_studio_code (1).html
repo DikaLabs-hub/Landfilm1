@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineStream Vision - Spatial Streaming Platform</title>
+  <meta name="description" content="Ultra-sleek spatial cinema streaming platform inspired by Netflix Vision Pro, featuring live search, dynamic category views, interactive modal video player, and dual-mode theme." />
+  <meta property="og:title" content="CineStream Vision - Spatial Streaming Platform" />
+  <meta property="og:description" content="Ultra-sleek spatial cinema streaming platform inspired by Netflix Vision Pro, featuring live search, dynamic category views, interactive modal video player, and dual-mode theme." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Tailwind CSS CDN (Zero-Config, Ready to Run) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#E50914',
+              redHover: '#B80710',
+              redGlow: 'rgba(229, 9, 20, 0.4)',
+              darkBg: '#08080b',
+              darkSurface: '#101116',
+              darkCard: '#15171e',
+              lightBg: '#f8fafc',
+              lightSurface: '#ffffff',
+              lightCard: '#f1f5f9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          boxShadow: {
+            'glow-red': '0 0 25px rgba(229, 9, 20, 0.45)',
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            'glass-light': '0 8px 32px 0 rgba(0, 0, 0, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(229, 9, 20, 0.6);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Spatial Ambient Background */
+    .spatial-bg {
+      background: radial-gradient(circle at 50% 20%, rgba(30, 27, 45, 0.7) 0%, rgba(11, 11, 14, 0.98) 75%),
+                  url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;
+    }
+    .spatial-bg-light {
+      background: radial-gradient(circle at 50% 10%, rgba(240, 244, 255, 0.85) 0%, rgba(248, 250, 252, 0.98) 75%),
+                  url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;
+    }
+
+    /* Glassmorphism Classes */
+    .glass-panel {
+      background: rgba(18, 19, 26, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel-light {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Animations */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(229, 9, 20, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(229, 9, 20, 0.7); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    /* Ad Container Styling */
+    .ad-slot-wrapper {
+      position: relative;
+      background: rgba(14, 15, 20, 0.6);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      transition: all 0.25s ease;
+    }
+    .dark .ad-slot-wrapper {
+      background: rgba(14, 15, 20, 0.65);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+    .light .ad-slot-wrapper {
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px dashed rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="spatial-bg text-neutral-100 font-sans min-h-screen antialiased selection:bg-brand-red selection:text-white transition-colors duration-300 overflow-x-hidden">
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- MAIN WRAPPER: FLOATING SPATIAL CINEMA CANVAS -->
+  <div class="min-h-screen p-2 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
+    <div class="w-full max-w-[1720px] rounded-2xl md:rounded-[32px] glass-panel shadow-[0_25px_70px_rgba(0,0,0,0.85)] border border-white/10 overflow-hidden flex flex-col transition-all duration-300" id="mainContainer">
+      
+      <!-- APP LAYOUT CONTAINER -->
+      <div class="flex flex-col lg:flex-row min-h-[90vh]">
+        
+        <!-- ============================================== -->
+        <!-- SIDEBAR NAVIGATION (Vision Pro Inspired) -->
+        <!-- ============================================== -->
+        <aside class="w-full lg:w-64 xl:w-72 bg-black/40 lg:border-r border-white/5 flex flex-col justify-between shrink-0 p-4 lg:p-6 select-none transition-colors duration-300" id="sidebarElement">
+          <div>
+            <!-- LOGO & BRAND -->
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-2 cursor-pointer group" onclick="switchPage('home')">
+                <span class="text-3xl font-black tracking-tighter text-[#E50914] drop-shadow-[0_0_12px_rgba(229,9,20,0.6)] group-hover:scale-105 transition-transform">
+                  NETFLIX
+                </span>
+                <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-white/10 text-white/70 border border-white/10">VISION</span>
+              </div>
+              
+              <!-- Mobile menu toggle button -->
+              <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg bg-white/5 text-neutral-300 hover:text-white hover:bg-white/10">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <!-- SEARCH INPUT IN SIDEBAR -->
+            <div class="relative mb-6">
+              <i data-lucide="search" class="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input 
+                type="text" 
+                id="sidebarSearchInput" 
+                placeholder="Search movies, series..." 
+                class="w-full pl-9 pr-8 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                oninput="handleLiveSearch(this.value)"
+              />
+              <button id="clearSearchBtn" onclick="clearLiveSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <!-- NAVIGATION ITEMS (COLLAPSIBLE ON MOBILE) -->
+            <nav id="navMenu" class="hidden lg:flex flex-col gap-1 space-y-1">
+              <div class="text-[11px] font-bold tracking-wider text-neutral-400 uppercase px-3 py-1">Menu</div>
+              
+              <button onclick="switchPage('home')" data-nav="home" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white bg-brand-red shadow-glow-red transition-all duration-200 w-full text-left">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span>Home</span>
+              </button>
+
+              <button onclick="switchPage('watchlist')" data-nav="watchlist" class="nav-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <div class="flex items-center gap-3.5">
+                  <i data-lucide="bookmark" class="w-4 h-4"></i>
+                  <span>Watch List</span>
+                </div>
+                <span id="watchlistCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">4</span>
+              </button>
+
+              <button onclick="switchPage('comingsoon')" data-nav="comingsoon" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                <span>Coming Soon</span>
+              </button>
+
+              <button onclick="switchPage('discovery')" data-nav="discovery" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <i data-lucide="compass" class="w-4 h-4"></i>
+                <span>Discovery</span>
+              </button>
+
+              <button onclick="switchPage('friends')" data-nav="friends" class="nav-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <div class="flex items-center gap-3.5">
+                  <i data-lucide="users" class="w-4 h-4"></i>
+                  <span>Friends</span>
+                </div>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </button>
+
+              <button onclick="switchPage('parties')" data-nav="parties" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <i data-lucide="clapperboard" class="w-4 h-4 text-purple-400"></i>
+                <span>Parties</span>
+              </button>
+
+              <button onclick="switchPage('media')" data-nav="media" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <i data-lucide="film" class="w-4 h-4"></i>
+                <span>Media</span>
+              </button>
+
+              <button onclick="switchPage('setting')" data-nav="setting" class="nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span>Setting</span>
+              </button>
+
+              <!-- LIBRARY SUBSECTION -->
+              <div class="pt-4 mt-2 border-t border-white/5">
+                <div class="text-[11px] font-bold tracking-wider text-neutral-400 uppercase px-3 py-1">Library</div>
+                
+                <button onclick="triggerToast('Viewing Recently Added movies')" class="flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all w-full text-left">
+                  <i data-lucide="clock" class="w-4 h-4"></i>
+                  <span>Recently Added</span>
+                </button>
+
+                <button onclick="switchPage('watchlist')" class="flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all w-full text-left">
+                  <i data-lucide="clock-4" class="w-4 h-4"></i>
+                  <span>Watch Later</span>
+                </button>
+
+                <button onclick="triggerToast('Offline Downloads ready for Spatial offline viewing')" class="flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all w-full text-left">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>Downloads</span>
+                </button>
+              </div>
+            </nav>
+          </div>
+
+          <!-- USER PROFILE FOOTER IN SIDEBAR -->
+          <div class="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-brand-red/60" />
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-neutral-900"></span>
+              </div>
+              <div class="overflow-hidden">
+                <div class="text-xs font-semibold truncate text-neutral-200">Alex Rivera</div>
+                <div class="text-[10px] text-brand-red font-medium flex items-center gap-1">
+                  <span>VIP ULTRA 4K</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="triggerToast('Account Settings: Vision Pro Cinema Audio Active')" class="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-white/5">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </aside>
+
+        <!-- ============================================== -->
+        <!-- MAIN CONTENT VIEWPORT -->
+        <!-- ============================================== -->
+        <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+          
+          <!-- TOP NAVBAR: Search, Night/Light Mode Toggle, Notifications, Direct Link Button -->
+          <header class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+            
+            <!-- Breadcrumbs / Section Title -->
+            <div class="flex items-center gap-3">
+              <h1 id="pageHeading" class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                Continue Watching
+                <i data-lucide="chevron-right" class="w-5 h-5 text-neutral-500"></i>
+              </h1>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-3 self-end sm:self-auto">
+              
+              <!-- Quick Filter / Tag -->
+              <div class="hidden md:flex items-center bg-white/5 rounded-full p-1 border border-white/10 text-xs">
+                <button onclick="filterContent('all')" class="px-3 py-1 rounded-full bg-brand-red text-white font-medium transition-all">All</button>
+                <button onclick="filterContent('series')" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white transition-all">Series</button>
+                <button onclick="filterContent('movies')" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white transition-all">Movies</button>
+              </div>
+
+              <!-- NIGHT & LIGHT MODE TOGGLE BUTTON -->
+              <button 
+                id="themeToggleBtn" 
+                onclick="toggleThemeMode()" 
+                class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-semibold text-neutral-200 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                title="Toggle Night / Light Mode"
+              >
+                <i data-lucide="moon" id="themeIcon" class="w-4 h-4 text-amber-300"></i>
+                <span id="themeText">Night</span>
+              </button>
+
+              <!-- NOTIFICATION BELL WITH DROPDOWN -->
+              <div class="relative">
+                <button 
+                  onclick="toggleNotificationPopover()" 
+                  class="relative p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 hover:text-white transition-all"
+                  title="Notifications"
+                >
+                  <i data-lucide="bell" class="w-4 h-4"></i>
+                  <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-brand-red ring-2 ring-black"></span>
+                </button>
+                
+                <!-- Notification Popover Menu -->
+                <div id="notificationPopover" class="hidden absolute right-0 mt-2 w-80 rounded-2xl glass-panel p-4 shadow-2xl border border-white/15 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-3">
+                    <span class="text-xs font-bold text-neutral-200 uppercase tracking-wider">Notifications</span>
+                    <button onclick="triggerToast('Notifications marked as read')" class="text-[10px] text-brand-red hover:underline">Mark all read</button>
+                  </div>
+                  <div class="space-y-3 text-xs">
+                    <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-brand-red/20 text-brand-red flex items-center justify-center shrink-0">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                      </div>
+                      <div>
+                        <div class="font-semibold text-white">Stranger Things Season 5</div>
+                        <div class="text-[11px] text-neutral-400 mt-0.5">Exclusive Vision 4K preview is now live!</div>
+                      </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white/5 border border-white/5 flex gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                      </div>
+                      <div>
+                        <div class="font-semibold text-white">Watch Party Invite</div>
+                        <div class="text-[11px] text-neutral-400 mt-0.5">Marcus invited you to watch 'Rebel Moon'.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DIRECT ACCESS / AD PROMOTION BUTTON -->
+              <button 
+                onclick="handleDirectLinkAction()" 
+                class="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white text-xs font-bold shadow-glow-red hover:scale-105 active:scale-95 transition-all"
+              >
+                <i data-lucide="zap" class="w-3.5 h-3.5 fill-white"></i>
+                <span>VIP Access</span>
+              </button>
+
+            </div>
+          </header>
+
+          <!-- DYNAMIC PAGE CONTAINER (Updated dynamically via sidebar clicks) -->
+          <div id="dynamicPageContent" class="space-y-8">
+            
+            <!-- ============================================== -->
+            <!-- SECTION 1: HERO / CONTINUE WATCHING (REF IMAGE) -->
+            <!-- ============================================== -->
+            <section id="heroSection" class="space-y-4">
+              <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+                
+                <!-- FEATURED PRIMARY CARD (STRANGER THINGS) -->
+                <div class="xl:col-span-8 relative rounded-3xl overflow-hidden min-h-[380px] sm:min-h-[420px] flex flex-col justify-end p-6 sm:p-8 border border-white/15 shadow-2xl group cursor-pointer transition-all duration-300"
+                     onclick="handleMovieAction('stranger-things')">
+                  
+                  <!-- Background Poster with Vignette -->
+                  <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                       style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');">
+                  </div>
+                  <!-- Cinema gradient scrim matching the dark red mood in reference -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-red-950/40 via-transparent to-black/60"></div>
+
+                  <!-- Content Details Overlay -->
+                  <div class="relative z-10 space-y-3 max-w-xl">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-black tracking-widest text-brand-red bg-black/60 px-2 py-0.5 rounded border border-brand-red/30">N SERIES</span>
+                      <span class="text-xs font-bold text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-500/30">98% Match</span>
+                      <span class="text-xs text-neutral-300 font-medium">2022</span>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-white/10 text-neutral-300 border border-white/10">4 Seasons</span>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">4K</span>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-white/10 text-neutral-300">Spatial Audio</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-md">
+                      STRANGER THINGS
+                    </h2>
+
+                    <!-- Genres -->
+                    <div class="text-xs text-neutral-300 font-medium">
+                      Sci-Fi &bull; Horror &bull; Mystery &bull; Supernatural
+                    </div>
+
+                    <!-- Synopsis -->
+                    <p class="text-xs sm:text-sm text-neutral-300 line-clamp-2 leading-relaxed">
+                      When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl with telekinetic powers.
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3 pt-2" onclick="event.stopPropagation();">
+                      <!-- Play Button (Dual-Action: Opens Modal + Opens Direct Ad Link in new tab) -->
+                      <button 
+                        onclick="handleMovieAction('stranger-things')" 
+                        class="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-neutral-200 font-bold text-sm flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <i data-lucide="play" class="w-4 h-4 fill-black"></i>
+                        <span>Play</span>
+                      </button>
+
+                      <!-- More Info Button -->
+                      <button 
+                        onclick="openMovieDetailModal('stranger-things')" 
+                        class="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/10 text-white font-semibold text-sm flex items-center gap-2 backdrop-blur-md hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                        <span>More Info</span>
+                      </button>
+
+                      <!-- Add to Watchlist Button -->
+                      <button 
+                        onclick="toggleWatchlist('stranger-things', 'Stranger Things')" 
+                        class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all hover:scale-105"
+                        title="Add to Watch List"
+                      >
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+
+                    <!-- Slide dots -->
+                    <div class="flex items-center gap-1.5 pt-2">
+                      <span class="w-5 h-1.5 rounded-full bg-brand-red"></span>
+                      <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                      <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SIDE CAROUSEL CARDS IN CONTINUE WATCHING -->
+                <div class="xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+                  
+                  <!-- Card 1: The Night Agent -->
+                  <div class="relative rounded-2xl overflow-hidden p-5 flex flex-col justify-end border border-white/10 shadow-lg group cursor-pointer h-[195px] xl:h-[200px]"
+                       onclick="handleMovieAction('night-agent')">
+                    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                         style="background-image: url('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1894&auto=format&fit=crop');">
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                    
+                    <div class="relative z-10 space-y-1.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/70 px-1.5 py-0.2 rounded border border-emerald-500/20">84% Match</span>
+                        <span class="text-[10px] text-neutral-300">Season 1</span>
+                      </div>
+                      <h3 class="text-lg font-bold text-white group-hover:text-brand-red transition-colors">THE NIGHT AGENT</h3>
+                      <div class="text-[11px] text-neutral-300">Thriller &bull; Action &bull; Spy</div>
+                      
+                      <!-- Watch progress bar -->
+                      <div class="w-full bg-white/20 h-1 rounded-full overflow-hidden mt-2">
+                        <div class="bg-brand-red h-full w-[65%]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card 2: Wednesday -->
+                  <div class="relative rounded-2xl overflow-hidden p-5 flex flex-col justify-end border border-white/10 shadow-lg group cursor-pointer h-[195px] xl:h-[200px]"
+                       onclick="handleMovieAction('wednesday')">
+                    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                         style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1884&auto=format&fit=crop');">
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                    
+                    <div class="relative z-10 space-y-1.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/70 px-1.5 py-0.2 rounded border border-emerald-500/20">96% Match</span>
+                        <span class="text-[10px] text-neutral-300">Season 1</span>
+                      </div>
+                      <h3 class="text-lg font-bold text-white group-hover:text-brand-red transition-colors">WEDNESDAY</h3>
+                      <div class="text-[11px] text-neutral-300">Mystery &bull; Comedy &bull; Fantasy</div>
+                      
+                      <!-- Watch progress bar -->
+                      <div class="w-full bg-white/20 h-1 rounded-full overflow-hidden mt-2">
+                        <div class="bg-brand-red h-full w-[42%]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- SECTION 2: NEW & POPULAR / NEW RELEASE (REF IMAGE) -->
+            <!-- ============================================== -->
+            <section id="newReleaseSection" class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                    <span>New & Popular</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-neutral-500"></i>
+                  </h2>
+                  <span class="text-xs text-neutral-400 hidden sm:inline">&bull; Recently updated worldwide catalogue</span>
+                </div>
+                <button onclick="switchPage('discovery')" class="text-xs font-semibold text-brand-red hover:underline flex items-center gap-1">
+                  <span>View All</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- MOVIE POSTERS HORIZONTAL GRID / SCROLL (Exactly matching reference cards) -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="movieCardGrid">
+                
+                <!-- CARD 1: LEAVE THE WORLD BEHIND -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="leave-world-behind" data-title="Leave The World Behind" data-genre="Drama, Thriller"
+                     onclick="handleMovieAction('leave-world-behind')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=1770&auto=format&fit=crop" 
+                         alt="Leave The World Behind" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N FILM</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">94%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">LEAVE THE WORLD BEHIND</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Drama &bull; Thriller</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 2: THE CROWN -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="the-crown" data-title="The Crown" data-genre="Drama, Historical"
+                     onclick="handleMovieAction('the-crown')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?q=80&w=1974&auto=format&fit=crop" 
+                         alt="The Crown" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N SERIES</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">91%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">THE CROWN</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Drama &bull; Historical</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 3: REBEL MOON -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="rebel-moon" data-title="Rebel Moon" data-genre="Sci-Fi, Action"
+                     onclick="handleMovieAction('rebel-moon')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1794&auto=format&fit=crop" 
+                         alt="Rebel Moon" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N FILM</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">89%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">REBEL MOON</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Sci-Fi &bull; Action</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 4: LUPIN -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="lupin" data-title="Lupin" data-genre="Crime, Mystery"
+                     onclick="handleMovieAction('lupin')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1771&auto=format&fit=crop" 
+                         alt="Lupin" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N SERIES</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">95%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">LUPIN</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Crime &bull; Mystery</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 5: THE WITCHER -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="the-witcher" data-title="The Witcher" data-genre="Fantasy, Action"
+                     onclick="handleMovieAction('the-witcher')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=1769&auto=format&fit=crop" 
+                         alt="The Witcher" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N SERIES</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">93%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">THE WITCHER</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Fantasy &bull; Action</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 6: THE KILLER -->
+                <div class="movie-card group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/10 hover:border-brand-red/50 transition-all duration-300 shadow-md cursor-pointer hover:-translate-y-1"
+                     data-id="the-killer" data-title="The Killer" data-genre="Thriller, Crime"
+                     onclick="handleMovieAction('the-killer')">
+                  <div class="aspect-[2/3] w-full overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1770&auto=format&fit=crop" 
+                         alt="The Killer" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+                    <span class="absolute top-2 left-2 text-[9px] font-black tracking-widest text-brand-red bg-black/70 px-1.5 py-0.5 rounded">N FILM</span>
+                    <span class="absolute top-2 right-2 text-[10px] font-bold text-emerald-400 bg-black/60 px-1.5 py-0.5 rounded">88%</span>
+                  </div>
+                  <div class="p-3 space-y-1">
+                    <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-brand-red transition-colors">THE KILLER</h3>
+                    <div class="text-[10px] text-neutral-400 truncate">Thriller &bull; Crime</div>
+                    <button class="w-full mt-2 py-1.5 rounded-lg bg-white/10 group-hover:bg-brand-red text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                      <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                      <span>Watch</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- [ATURAN IKLAN 2] BANNER_HORIZONTAL PERSIS DI BAWAH NEW RELEASE -->
+            <!-- ============================================================== -->
+            <section class="banner-horizontal-wrapper my-6 flex flex-col items-center justify-center p-3 rounded-2xl ad-slot-wrapper backdrop-blur-md overflow-hidden max-w-full">
+              <div class="flex items-center gap-2 mb-2 text-neutral-400 text-[10px] font-semibold tracking-wider uppercase">
+                <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
+                <span>SPONSORED ADVERTISEMENT</span>
+              </div>
+              <div class="ad-container overflow-hidden rounded-lg flex justify-center items-center min-h-[90px] w-full max-w-[728px]">
+                <!-- SCRIPT BANNER_HORIZONTAL SESUAI SPESIFIKASI WAJIB -->
+                <script>
+                  atOptions = {
+                    'key' : '85f9983f424fc97bd41ba74a2c4a48ed',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                  };
+                </script>
+                <script src="https://bauval.org/22/85f9983f424fc97bd41ba74a2c4a48ed"></script>
+              </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- SECTION 3: POPULAR MOVIES & FAVORITES WITH BANNER_KOTAK       -->
+            <!-- ============================================================== -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              
+              <!-- POPULAR MOVIES SECTION (Left / Middle 8 cols) -->
+              <div class="lg:col-span-8 space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-orange-500"></i>
+                    <span>Popular Movies</span>
+                  </h3>
+                  <span class="text-xs text-neutral-400">Trending Worldwide</span>
+                </div>
+
+                <div class="space-y-2.5">
+                  <!-- Row Item 1 -->
+                  <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group cursor-pointer"
+                       onclick="handleMovieAction('oppenheimer')">
+                    <div class="flex items-center gap-3.5">
+                      <span class="text-base font-black text-brand-red w-4">#1</span>
+                      <img src="https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1974&auto=format&fit=crop" class="w-14 h-10 object-cover rounded-lg" alt="Oppenheimer" />
+                      <div>
+                        <div class="text-xs sm:text-sm font-bold text-white group-hover:text-brand-red transition-colors">Oppenheimer</div>
+                        <div class="text-[11px] text-neutral-400">Biography &bull; Drama &bull; 3h 0min</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded">★ 8.9</span>
+                      <button class="p-2 rounded-xl bg-white/10 group-hover:bg-brand-red text-white transition-colors">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Row Item 2 -->
+                  <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group cursor-pointer"
+                       onclick="handleMovieAction('dune-part-two')">
+                    <div class="flex items-center gap-3.5">
+                      <span class="text-base font-black text-brand-red w-4">#2</span>
+                      <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1894&auto=format&fit=crop" class="w-14 h-10 object-cover rounded-lg" alt="Dune: Part Two" />
+                      <div>
+                        <div class="text-xs sm:text-sm font-bold text-white group-hover:text-brand-red transition-colors">Dune: Part Two</div>
+                        <div class="text-[11px] text-neutral-400">Sci-Fi &bull; Adventure &bull; 2h 46min</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded">★ 8.8</span>
+                      <button class="p-2 rounded-xl bg-white/10 group-hover:bg-brand-red text-white transition-colors">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Row Item 3 -->
+                  <div class="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group cursor-pointer"
+                       onclick="handleMovieAction('avatar-airbender')">
+                    <div class="flex items-center gap-3.5">
+                      <span class="text-base font-black text-brand-red w-4">#3</span>
+                      <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1884&auto=format&fit=crop" class="w-14 h-10 object-cover rounded-lg" alt="Avatar The Last Airbender" />
+                      <div>
+                        <div class="text-xs sm:text-sm font-bold text-white group-hover:text-brand-red transition-colors">Avatar: The Last Airbender</div>
+                        <div class="text-[11px] text-neutral-400">Fantasy &bull; Action &bull; 8 Episodes</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded">★ 8.5</span>
+                      <button class="p-2 rounded-xl bg-white/10 group-hover:bg-brand-red text-white transition-colors">
+                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT SIDEBAR SECTION: BANNER_KOTAK PERSIS DI ANTARA POPULAR MOVIES & FAVORITES -->
+              <div class="lg:col-span-4 flex flex-col space-y-4">
+                
+                <!-- [ATURAN IKLAN 3] BANNER_KOTAK PERSIS DI SIDEBAR KANAN -->
+                <div class="banner-kotak-wrapper flex flex-col items-center justify-center p-3 rounded-2xl ad-slot-wrapper backdrop-blur-md overflow-hidden">
+                  <div class="flex items-center gap-2 mb-2 text-neutral-400 text-[10px] font-semibold tracking-wider uppercase">
+                    <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
+                    <span>SPONSORED (300x250)</span>
+                  </div>
+                  <div class="ad-container overflow-hidden rounded-lg flex justify-center items-center min-h-[250px] w-[300px]">
+                    <!-- SCRIPT BANNER_KOTAK SESUAI SPESIFIKASI WAJIB -->
+                    <script>
+                      atOptions = {
+                        'key' : 'e4934063ea92e1ca92017efd20bcf5f9',
+                        'format' : 'iframe',
+                        'height' : 250,
+                        'width' : 300,
+                        'params' : {}
+                      };
+                    </script>
+                    <script src="https://www.highrevenueformat.com/e4934063ea92e1ca92017efd20bcf5f9/invoke.js"></script>
+                  </div>
+                </div>
+
+                <!-- FAVORITES SECTION (Di Bawah Banner Kotak) -->
+                <div class="space-y-3 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                      <i data-lucide="heart" class="w-4 h-4 text-brand-red fill-brand-red"></i>
+                      <span>Favorites</span>
+                    </h4>
+                    <span class="text-[11px] text-brand-red font-medium cursor-pointer hover:underline" onclick="switchPage('watchlist')">View all</span>
+                  </div>
+
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-colors" onclick="handleMovieAction('stranger-things')">
+                      <div class="flex items-center gap-2.5">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=100&auto=format&fit=crop" class="w-8 h-8 rounded-lg object-cover" alt="Fav 1" />
+                        <div>
+                          <div class="text-xs font-semibold text-white">Stranger Things</div>
+                          <div class="text-[10px] text-neutral-400">Sci-Fi &bull; 4 Seasons</div>
+                        </div>
+                      </div>
+                      <i data-lucide="play-circle" class="w-4 h-4 text-brand-red"></i>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-colors" onclick="handleMovieAction('the-witcher')">
+                      <div class="flex items-center gap-2.5">
+                        <img src="https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=100&auto=format&fit=crop" class="w-8 h-8 rounded-lg object-cover" alt="Fav 2" />
+                        <div>
+                          <div class="text-xs font-semibold text-white">The Witcher</div>
+                          <div class="text-[10px] text-neutral-400">Fantasy &bull; Season 3</div>
+                        </div>
+                      </div>
+                      <i data-lucide="play-circle" class="w-4 h-4 text-brand-red"></i>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+          </div><!-- END DYNAMIC PAGE CONTENT -->
+
+        </main>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- FLOATING SPATIAL NOW-PLAYING BAR (Identik Bar di Bawah Layar Referensi) -->
+      <!-- ============================================================== -->
+      <footer class="bg-black/80 backdrop-blur-2xl border-t border-white/10 px-4 sm:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-3 select-none">
+        
+        <!-- Track & Episode Info -->
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <div class="relative shrink-0 cursor-pointer group" onclick="openVideoModal('stranger-things')">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=120&auto=format&fit=crop" 
+                 alt="Current thumbnail" 
+                 class="w-12 h-12 rounded-xl object-cover ring-1 ring-white/20 group-hover:scale-105 transition-transform" />
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-xl transition-opacity">
+              <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
+            </div>
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-2">
+              <span id="playerTrackTitle">Stranger Things</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-brand-red text-white font-extrabold uppercase tracking-wide">Spatial 4K</span>
+            </div>
+            <div class="text-[11px] text-neutral-400 truncate" id="playerTrackSubtitle">
+              S4:E7 &bull; The Massacre at Hawkins Lab
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Controls: Prev, Play/Pause, Next, Scrubber -->
+        <div class="flex flex-col items-center gap-1.5 w-full md:w-1/2 max-w-xl">
+          <div class="flex items-center gap-4">
+            <button onclick="rewindPlayback(10)" class="text-neutral-400 hover:text-white transition-colors" title="Rewind 10s">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+            <button onclick="triggerToast('Playing previous episode')" class="text-neutral-400 hover:text-white transition-colors">
+              <i data-lucide="skip-back" class="w-4 h-4"></i>
+            </button>
+            <button id="miniPlayBtn" onclick="toggleMiniPlayerPlayback()" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md">
+              <i data-lucide="pause" id="miniPlayIcon" class="w-4 h-4 fill-black"></i>
+            </button>
+            <button onclick="triggerToast('Playing next episode')" class="text-neutral-400 hover:text-white transition-colors">
+              <i data-lucide="skip-forward" class="w-4 h-4"></i>
+            </button>
+            <button onclick="forwardPlayback(10)" class="text-neutral-400 hover:text-white transition-colors" title="Forward 10s">
+              <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Scrubber Timeline Bar -->
+          <div class="flex items-center gap-3 w-full text-[10px] text-neutral-400 font-mono">
+            <span id="currentTimeLabel">32:15</span>
+            <div class="relative flex-1 h-1.5 bg-white/20 rounded-full cursor-pointer group" onclick="seekMiniPlayer(event, this)">
+              <div id="playerProgressFill" class="absolute top-0 left-0 h-full bg-brand-red rounded-full w-[41%] group-hover:bg-red-500"></div>
+              <div id="playerProgressKnob" class="absolute top-1/2 -translate-y-1/2 left-[41%] w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            <span id="totalTimeLabel">1:17:42</span>
+          </div>
+        </div>
+
+        <!-- Right Side: Volume & Expand Fullscreen -->
+        <div class="flex items-center gap-3 justify-end w-full md:w-auto">
+          <div class="flex items-center gap-2">
+            <button onclick="toggleMutePlayer()" class="text-neutral-400 hover:text-white">
+              <i data-lucide="volume-2" id="volumeIcon" class="w-4 h-4"></i>
+            </button>
+            <input type="range" min="0" max="100" value="75" class="w-16 sm:w-20 accent-brand-red h-1 rounded-lg cursor-pointer" oninput="changeVolume(this.value)" />
+          </div>
+          <button onclick="openVideoModal('stranger-things')" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Expand Cinema Player">
+            <i data-lucide="maximize" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL VIDEO PLAYER (Popup Cinema Player 100% Working)         -->
+  <!-- ============================================================== -->
+  <div id="videoModal" class="fixed inset-0 z-[9990] hidden flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-2xl transition-opacity duration-300">
+    <div class="relative w-full max-w-5xl rounded-3xl overflow-hidden glass-panel border border-white/20 shadow-2xl flex flex-col bg-[#0b0b0e] animate-in zoom-in-95 duration-200">
+      
+      <!-- Top Modal Bar -->
+      <div class="flex items-center justify-between p-4 px-6 border-b border-white/10 bg-black/60 z-20">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-black text-brand-red">NETFLIX VISION</span>
+          <span class="text-xs px-2 py-0.5 rounded bg-brand-red/20 text-brand-red font-bold uppercase tracking-wider">ULTRA 4K HDR</span>
+          <span id="modalVideoTitle" class="text-sm font-semibold text-white">Stranger Things - Season 4</span>
+        </div>
+        <button onclick="closeVideoModal()" class="p-2 rounded-full bg-white/10 hover:bg-brand-red text-white transition-colors" title="Close Player (Esc)">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Video Player Canvas Simulation -->
+      <div class="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden group">
+        
+        <!-- Video Backdrop / Simulated Stream -->
+        <video 
+          id="mainVideoElement" 
+          class="w-full h-full object-cover" 
+          poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop"
+          loop
+          playsinline
+        >
+          <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+        </video>
+
+        <!-- Centered Play/Pause Overlay Animation -->
+        <div id="videoPlayOverlay" onclick="toggleModalVideoPlay()" class="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="w-16 h-16 rounded-full bg-brand-red/90 text-white flex items-center justify-center shadow-glow-red hover:scale-110 transition-transform">
+            <i data-lucide="play" id="modalCenterPlayIcon" class="w-7 h-7 fill-white translate-x-0.5"></i>
+          </div>
+        </div>
+
+        <!-- Bottom Controls Overlay -->
+        <div class="absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-2 z-10">
+          
+          <!-- Scrubber Bar -->
+          <div class="flex items-center gap-3 w-full text-xs text-white/80 font-mono">
+            <span id="modalCurrentTime">00:00</span>
+            <input 
+              type="range" 
+              id="modalSeekBar" 
+              min="0" 
+              max="100" 
+              value="0" 
+              class="w-full accent-brand-red h-1.5 rounded-lg cursor-pointer"
+              oninput="handleModalSeek(this.value)"
+            />
+            <span id="modalDurationTime">09:56</span>
+          </div>
+
+          <!-- Bottom Control Buttons -->
+          <div class="flex items-center justify-between text-white pt-1">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <button onclick="toggleModalVideoPlay()" class="p-2 rounded-lg hover:bg-white/10">
+                <i data-lucide="play" id="modalBottomPlayIcon" class="w-5 h-5 fill-current"></i>
+              </button>
+              <button onclick="rewindModalVideo(10)" class="p-2 rounded-lg hover:bg-white/10" title="Rewind 10s">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              </button>
+              <button onclick="forwardModalVideo(10)" class="p-2 rounded-lg hover:bg-white/10" title="Forward 10s">
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+              </button>
+              <div class="flex items-center gap-1.5">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+                <input type="range" min="0" max="1" step="0.05" value="0.8" class="w-16 accent-brand-red h-1 rounded cursor-pointer" oninput="setModalVolume(this.value)" />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+              <button onclick="triggerToast('Subtitles: English [CC] Enabled')" class="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold">CC</button>
+              <button onclick="triggerToast('Stream Quality: 4K UHD 60fps')" class="px-2 py-1 rounded bg-brand-red text-white text-xs font-bold">4K</button>
+              <button onclick="toggleModalFullscreen()" class="p-2 rounded-lg hover:bg-white/10">
+                <i data-lucide="maximize" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Movie Details Under Player -->
+      <div class="p-6 bg-[#0f1015] space-y-3">
+        <div class="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h3 id="modalDetailTitle" class="text-xl font-bold text-white">Stranger Things: The Final Season Preview</h3>
+            <div class="text-xs text-neutral-400 mt-1 flex items-center gap-3">
+              <span class="text-emerald-400 font-bold">98% Match</span>
+              <span>2024 Release</span>
+              <span>Dolby Atmos Spatial Audio</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Dual action watch full button -->
+            <button onclick="handleDirectLinkAction()" class="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-bold shadow-glow-red flex items-center gap-2">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              <span>Watch Server Stream</span>
+            </button>
+          </div>
+        </div>
+        <p id="modalDetailDesc" class="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+          Experience ultra high-definition spatial immersion. Stream uninterrupted in true 4K resolution with multi-channel surround acoustic staging.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT LOGIC (Vanilla JS 100% Working, Clean & Structured) -->
+  <!-- ============================================================== -->
+  <script>
+    // ==========================================
+    // 1. AD & MONETIZATION CONFIGURATION
+    // ==========================================
+    const DIRECT_LINK = "https://www.profitableratecpmnetwork.com/c1jcvnz0j?key=52c49c1a6264e394b3fc5bf019edd14e";
+
+    // Movie database dictionary for detail modals & playback
+    const MOVIES_DATABASE = {
+      'stranger-things': {
+        title: "Stranger Things",
+        subtitle: "S4:E7 - The Massacre at Hawkins Lab",
+        genres: "Sci-Fi • Horror • Mystery",
+        match: "98%",
+        year: "2022",
+        rating: "TV-MA",
+        description: "When a boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying forces, and one strange little girl.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      },
+      'night-agent': {
+        title: "The Night Agent",
+        subtitle: "S1:E3 - The Zoey Factor",
+        genres: "Thriller • Action • Spy",
+        match: "84%",
+        year: "2023",
+        rating: "TV-MA",
+        description: "While monitoring an emergency line, an FBI agent answers a call that plunges him into a deadly conspiracy involving a mole at the White House.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      },
+      'wednesday': {
+        title: "Wednesday",
+        subtitle: "S1:E1 - Wednesday's Child is Full of Woe",
+        genres: "Mystery • Comedy • Fantasy",
+        match: "96%",
+        year: "2022",
+        rating: "TV-14",
+        description: "Smart, sarcastic and a little dead inside, Wednesday Addams investigates a murder spree while making new friends — and foes — at Nevermore Academy.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      },
+      'leave-world-behind': {
+        title: "Leave The World Behind",
+        subtitle: "Full Feature Film",
+        genres: "Drama • Thriller • Psychological",
+        match: "94%",
+        year: "2023",
+        rating: "R",
+        description: "A family's quiet getaway is upended when two strangers arrive at night, bearing news of a mysterious cyberattack and seeking sanctuary in their rented home.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+      },
+      'the-crown': {
+        title: "The Crown",
+        subtitle: "S6:E4 - Aftermath",
+        genres: "Drama • Historical • Royalty",
+        match: "91%",
+        year: "2023",
+        rating: "TV-MA",
+        description: "Inspired by real events, this fictional dramatization tells the story of Queen Elizabeth II and the political and personal events that shaped her reign.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+      },
+      'rebel-moon': {
+        title: "Rebel Moon",
+        subtitle: "Part One: A Child of Fire",
+        genres: "Sci-Fi • Action • Space Opera",
+        match: "89%",
+        year: "2023",
+        rating: "PG-13",
+        description: "When a peaceful settlement on the edge of a distant moon finds itself threatened by the armies of a tyrannical ruling force, a mysterious stranger becomes their best hope for survival.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4"
+      },
+      'lupin': {
+        title: "Lupin",
+        subtitle: "Part 3: Chapter 1",
+        genres: "Crime • Mystery • Drama",
+        match: "95%",
+        year: "2023",
+        rating: "TV-MA",
+        description: "Inspired by the adventures of Arsène Lupin, gentleman thief Assane Diop sets out to avenge his father for an injustice inflicted by a wealthy family.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+      },
+      'the-witcher': {
+        title: "The Witcher",
+        subtitle: "S3:E1 - Shaerrawedd",
+        genres: "Fantasy • Action • Adventure",
+        match: "93%",
+        year: "2023",
+        rating: "TV-MA",
+        description: "Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+      },
+      'the-killer': {
+        title: "The Killer",
+        subtitle: "Full Feature Film",
+        genres: "Thriller • Crime • Noir",
+        match: "88%",
+        year: "2023",
+        rating: "R",
+        description: "After a fateful near-miss, an assassin battles his employers, and himself, on an international manhunt he insists isn't personal.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackSeeTheWorld.mp4"
+      },
+      'oppenheimer': {
+        title: "Oppenheimer",
+        subtitle: "Director's Cut 4K",
+        genres: "Biography • Drama • History",
+        match: "99%",
+        year: "2023",
+        rating: "R",
+        description: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+      },
+      'dune-part-two': {
+        title: "Dune: Part Two",
+        subtitle: "IMAX Enhanced",
+        genres: "Sci-Fi • Adventure",
+        match: "98%",
+        year: "2024",
+        rating: "PG-13",
+        description: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4"
+      },
+      'avatar-airbender': {
+        title: "Avatar: The Last Airbender",
+        subtitle: "Season 1",
+        genres: "Fantasy • Action",
+        match: "97%",
+        year: "2024",
+        rating: "TV-PG",
+        description: "A young boy known as the Avatar must master the four elemental powers to save a world at war and fight a ruthless enemy.",
+        videoSrc: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+      }
+    };
+
+    // User Watchlist State
+    let userWatchlist = ['stranger-things', 'the-crown', 'the-witcher', 'wednesday'];
+
+    // ==========================================
+    // [ATURAN IKLAN 1] DUAL-ACTION FUNCTION
+    // Membuka modal video player ATAU mengarahkan ke DIRECT_LINK di tab baru
+    // ==========================================
+    function handleMovieAction(movieId) {
+      // 1. Direct Link Monetization Action (Open in new tab)
+      try {
+        window.open(DIRECT_LINK, '_blank');
+      } catch (err) {
+        console.warn("Direct link popup intercepted:", err);
+      }
+
+      // 2. Open interactive Video Player Modal
+      openVideoModal(movieId);
+
+      // Toast feedback
+      triggerToast(`Opening Cinema Stream for ${MOVIES_DATABASE[movieId]?.title || 'Movie'}`);
+    }
+
+    // Direct Link Button Trigger
+    function handleDirectLinkAction() {
+      try {
+        window.open(DIRECT_LINK, '_blank');
+        triggerToast("Accessing VIP Server Stream in new tab...");
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // ==========================================
+    // 2. VIDEO PLAYER MODAL CONTROLS
+    // ==========================================
+    const videoModal = document.getElementById('videoModal');
+    const mainVideoElement = document.getElementById('mainVideoElement');
+    const modalVideoTitle = document.getElementById('modalVideoTitle');
+    const modalDetailTitle = document.getElementById('modalDetailTitle');
+    const modalDetailDesc = document.getElementById('modalDetailDesc');
+    const modalCenterPlayIcon = document.getElementById('modalCenterPlayIcon');
+    const modalBottomPlayIcon = document.getElementById('modalBottomPlayIcon');
+    const modalSeekBar = document.getElementById('modalSeekBar');
+    const modalCurrentTime = document.getElementById('modalCurrentTime');
+    const modalDurationTime = document.getElementById('modalDurationTime');
+
+    function openVideoModal(movieId) {
+      const movie = MOVIES_DATABASE[movieId] || MOVIES_DATABASE['stranger-things'];
+      
+      modalVideoTitle.innerText = `${movie.title} • ${movie.subtitle}`;
+      modalDetailTitle.innerText = `${movie.title} (${movie.year})`;
+      modalDetailDesc.innerText = movie.description;
+      
+      // Update video source
+      if (movie.videoSrc) {
+        mainVideoElement.src = movie.videoSrc;
+      }
+      
+      videoModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      // Update Now Playing Mini Player simultaneously
+      updateNowPlayingBar(movie);
+
+      // Play video
+      mainVideoElement.play().then(() => {
+        updatePlayIcons(true);
+      }).catch(() => {
+        updatePlayIcons(false);
+      });
+    }
+
+    function closeVideoModal() {
+      videoModal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      mainVideoElement.pause();
+      updatePlayIcons(false);
+    }
+
+    // Close on Escape Key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !videoModal.classList.contains('hidden')) {
+        closeVideoModal();
+      }
+    });
+
+    // Close when clicking modal backdrop
+    videoModal.addEventListener('click', (e) => {
+      if (e.target === videoModal) {
+        closeVideoModal();
+      }
+    });
+
+    function toggleModalVideoPlay() {
+      if (mainVideoElement.paused) {
+        mainVideoElement.play();
+        updatePlayIcons(true);
+      } else {
+        mainVideoElement.pause();
+        updatePlayIcons(false);
+      }
+    }
+
+    function updatePlayIcons(isPlaying) {
+      const iconName = isPlaying ? 'pause' : 'play';
+      modalCenterPlayIcon.setAttribute('data-lucide', iconName);
+      modalBottomPlayIcon.setAttribute('data-lucide', iconName);
+      document.getElementById('miniPlayIcon').setAttribute('data-lucide', iconName);
+      lucide.createIcons();
+    }
+
+    // Video Time Updates
+    mainVideoElement.addEventListener('timeupdate', () => {
+      if (!isNaN(mainVideoElement.duration)) {
+        const progress = (mainVideoElement.currentTime / mainVideoElement.duration) * 100;
+        modalSeekBar.value = progress;
+        modalCurrentTime.innerText = formatTime(mainVideoElement.currentTime);
+        modalDurationTime.innerText = formatTime(mainVideoElement.duration);
+
+        // Also sync mini player
+        document.getElementById('playerProgressFill').style.width = `${progress}%`;
+        document.getElementById('playerProgressKnob').style.left = `${progress}%`;
+        document.getElementById('currentTimeLabel').innerText = formatTime(mainVideoElement.currentTime);
+      }
+    });
+
+    function handleModalSeek(value) {
+      if (!isNaN(mainVideoElement.duration)) {
+        mainVideoElement.currentTime = (value / 100) * mainVideoElement.duration;
+      }
+    }
+
+    function rewindModalVideo(seconds) {
+      mainVideoElement.currentTime = Math.max(0, mainVideoElement.currentTime - seconds);
+    }
+
+    function forwardModalVideo(seconds) {
+      mainVideoElement.currentTime = Math.min(mainVideoElement.duration, mainVideoElement.currentTime + seconds);
+    }
+
+    function setModalVolume(val) {
+      mainVideoElement.volume = parseFloat(val);
+    }
+
+    function toggleModalFullscreen() {
+      if (!document.fullscreenElement) {
+        videoModal.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+    }
+
+    function openMovieDetailModal(movieId) {
+      openVideoModal(movieId);
+    }
+
+    // ==========================================
+    // 3. NOW PLAYING MINI BAR CONTROLS
+    // ==========================================
+    function updateNowPlayingBar(movie) {
+      document.getElementById('playerTrackTitle').innerText = movie.title;
+      document.getElementById('playerTrackSubtitle').innerText = movie.subtitle;
+    }
+
+    function toggleMiniPlayerPlayback() {
+      toggleModalVideoPlay();
+    }
+
+    function rewindPlayback(seconds) {
+      rewindModalVideo(seconds);
+      triggerToast("Rewound 10 seconds");
+    }
+
+    function forwardPlayback(seconds) {
+      forwardModalVideo(seconds);
+      triggerToast("Forwarded 10 seconds");
+    }
+
+    function seekMiniPlayer(event, container) {
+      const rect = container.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+      if (!isNaN(mainVideoElement.duration)) {
+        mainVideoElement.currentTime = pct * mainVideoElement.duration;
+      }
+    }
+
+    function changeVolume(val) {
+      const volume = val / 100;
+      mainVideoElement.volume = volume;
+      const volIcon = document.getElementById('volumeIcon');
+      if (volume === 0) {
+        volIcon.setAttribute('data-lucide', 'volume-x');
+      } else if (volume < 0.5) {
+        volIcon.setAttribute('data-lucide', 'volume-1');
+      } else {
+        volIcon.setAttribute('data-lucide', 'volume-2');
+      }
+      lucide.createIcons();
+    }
+
+    let isMuted = false;
+    function toggleMutePlayer() {
+      isMuted = !isMuted;
+      mainVideoElement.muted = isMuted;
+      document.getElementById('volumeIcon').setAttribute('data-lucide', isMuted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
+      triggerToast(isMuted ? "Audio Muted" : "Audio Unmuted");
+    }
+
+    function formatTime(sec) {
+      const mins = Math.floor(sec / 60);
+      const secs = Math.floor(sec % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // ==========================================
+    // 4. LIVE SEARCH FILTER FUNCTIONALITY
+    // ==========================================
+    function handleLiveSearch(query) {
+      const cleanQuery = query.toLowerCase().trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      
+      if (cleanQuery.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      const movieCards = document.querySelectorAll('.movie-card');
+      let matchCount = 0;
+
+      movieCards.forEach(card => {
+        const title = card.getAttribute('data-title')?.toLowerCase() || '';
+        const genre = card.getAttribute('data-genre')?.toLowerCase() || '';
+
+        if (title.includes(cleanQuery) || genre.includes(cleanQuery)) {
+          card.style.display = 'block';
+          matchCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Also filter hero section visibility if search active
+      const heroSection = document.getElementById('heroSection');
+      if (cleanQuery.length > 0) {
+        heroSection.classList.add('opacity-40');
+      } else {
+        heroSection.classList.remove('opacity-40');
+      }
+    }
+
+    function clearLiveSearch() {
+      const input = document.getElementById('sidebarSearchInput');
+      input.value = '';
+      handleLiveSearch('');
+      input.focus();
+    }
+
+    // ==========================================
+    // 5. NIGHT & LIGHT MODE TOGGLE
+    // ==========================================
+    let isDarkMode = true;
+
+    function toggleThemeMode() {
+      isDarkMode = !isDarkMode;
+      const htmlEl = document.documentElement;
+      const bodyEl = document.body;
+      const themeText = document.getElementById('themeText');
+      const themeIcon = document.getElementById('themeIcon');
+      const mainContainer = document.getElementById('mainContainer');
+      const sidebarElement = document.getElementById('sidebarElement');
+
+      if (isDarkMode) {
+        htmlEl.classList.add('dark');
+        htmlEl.classList.remove('light');
+        bodyEl.className = "spatial-bg text-neutral-100 font-sans min-h-screen antialiased selection:bg-brand-red selection:text-white transition-colors duration-300 overflow-x-hidden";
+        themeText.innerText = "Night";
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeIcon.classList.add('text-amber-300');
+        themeIcon.classList.remove('text-amber-500');
+        mainContainer.className = "w-full max-w-[1720px] rounded-2xl md:rounded-[32px] glass-panel shadow-[0_25px_70px_rgba(0,0,0,0.85)] border border-white/10 overflow-hidden flex flex-col transition-all duration-300";
+        sidebarElement.className = "w-full lg:w-64 xl:w-72 bg-black/40 lg:border-r border-white/5 flex flex-col justify-between shrink-0 p-4 lg:p-6 select-none transition-colors duration-300";
+        triggerToast("Switched to Spatial Dark Cinema Mode");
+      } else {
+        htmlEl.classList.remove('dark');
+        htmlEl.classList.add('light');
+        bodyEl.className = "spatial-bg-light text-neutral-900 font-sans min-h-screen antialiased selection:bg-brand-red selection:text-white transition-colors duration-300 overflow-x-hidden";
+        themeText.innerText = "Light";
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeIcon.classList.remove('text-amber-300');
+        themeIcon.classList.add('text-amber-500');
+        mainContainer.className = "w-full max-w-[1720px] rounded-2xl md:rounded-[32px] glass-panel-light shadow-[0_25px_70px_rgba(0,0,0,0.08)] border border-black/10 overflow-hidden flex flex-col transition-all duration-300";
+        sidebarElement.className = "w-full lg:w-64 xl:w-72 bg-white/70 lg:border-r border-black/5 flex flex-col justify-between shrink-0 p-4 lg:p-6 select-none transition-colors duration-300";
+        triggerToast("Switched to Crisp Daylight Mode");
+      }
+      lucide.createIcons();
+    }
+
+    // ==========================================
+    // 6. DYNAMIC SIDEBAR MENU NAVIGATION (STATE MANAGEMENT)
+    // ==========================================
+    let currentPage = 'home';
+
+    function switchPage(pageKey) {
+      currentPage = pageKey;
+
+      // Update active nav button styles
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const nav = btn.getAttribute('data-nav');
+        if (nav === pageKey) {
+          btn.className = "nav-item flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white bg-brand-red shadow-glow-red transition-all duration-200 w-full text-left";
+        } else {
+          btn.className = "nav-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all duration-200 w-full text-left";
+        }
+      });
+
+      const pageHeading = document.getElementById('pageHeading');
+      const dynamicPageContent = document.getElementById('dynamicPageContent');
+
+      // Scroll to top
+      document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Render Dynamic Page Views
+      switch (pageKey) {
+        case 'home':
+          pageHeading.innerHTML = `Continue Watching <i data-lucide="chevron-right" class="w-5 h-5 text-neutral-500"></i>`;
+          renderHomePage();
+          break;
+
+        case 'watchlist':
+          pageHeading.innerHTML = `My Watch List <span class="text-xs px-2.5 py-1 rounded-full bg-brand-red/20 text-brand-red font-bold">${userWatchlist.length} Items</span>`;
+          renderWatchlistPage();
+          break;
+
+        case 'comingsoon':
+          pageHeading.innerHTML = `Coming Soon <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 font-bold">Vision Premiere 2024</span>`;
+          renderComingSoonPage();
+          break;
+
+        case 'discovery':
+          pageHeading.innerHTML = `Genre Discovery &bull; Explore Categories`;
+          renderDiscoveryPage();
+          break;
+
+        case 'friends':
+          pageHeading.innerHTML = `Friends Activity &bull; Live Watch Status`;
+          renderFriendsPage();
+          break;
+
+        case 'parties':
+          pageHeading.innerHTML = `Watch Parties &bull; Virtual Cinema Rooms`;
+          renderPartiesPage();
+          break;
+
+        case 'media':
+          pageHeading.innerHTML = `Media Vault &bull; 4K Spatial Trailers & OST`;
+          renderMediaPage();
+          break;
+
+        case 'setting':
+          pageHeading.innerHTML = `Streaming & Vision Settings`;
+          renderSettingsPage();
+          break;
+
+        default:
+          renderHomePage();
+      }
+
+      lucide.createIcons();
+    }
+
+    // Dynamic Pages Templates
+    function renderHomePage() {
+      location.reload(); // Quick restore of base hero view or re-render
+    }
+
+    function renderWatchlistPage() {
+      const container = document.getElementById('dynamicPageContent');
+      let cardsHtml = '';
+      
+      userWatchlist.forEach(id => {
+        const item = MOVIES_DATABASE[id] || { title: id, genres: "Cinema", match: "95%" };
+        cardsHtml += `
+          <div class="relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-brand-red p-4 flex flex-col justify-between transition-all group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-emerald-400">${item.match} Match</span>
+              <button onclick="removeFromWatchlist('${id}')" class="text-neutral-400 hover:text-brand-red p-1" title="Remove">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <h4 class="text-base font-bold text-white group-hover:text-brand-red transition-colors">${item.title}</h4>
+            <p class="text-xs text-neutral-400 mt-1">${item.genres}</p>
+            <div class="flex items-center gap-2 mt-4">
+              <button onclick="handleMovieAction('${id}')" class="flex-1 py-2 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-glow-red">
+                <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+                <span>Play Now</span>
+              </button>
+              <button onclick="handleDirectLinkAction()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex items-center justify-between p-6 rounded-3xl bg-gradient-to-r from-red-950/40 to-neutral-900 border border-white/10">
+            <div>
+              <h2 class="text-xl font-bold text-white">Your Saved Watch List</h2>
+              <p class="text-xs text-neutral-400 mt-1">Ready for high bitrate Spatial playback on your device</p>
+            </div>
+            <button onclick="handleDirectLinkAction()" class="px-4 py-2 rounded-xl bg-brand-red text-white text-xs font-bold shadow-glow-red">
+              Download All Offline
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            ${cardsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderComingSoonPage() {
+      const container = document.getElementById('dynamicPageContent');
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="rounded-3xl overflow-hidden bg-neutral-900 border border-white/10 p-5 space-y-4">
+              <div class="aspect-video rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?q=80&w=600" class="w-full h-full object-cover" />
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-brand-red text-[10px] font-bold text-white">MARCH 15</span>
+              </div>
+              <h3 class="text-lg font-bold text-white">Cyberpunk: Phantom Echo</h3>
+              <p class="text-xs text-neutral-400">An undercover synthetic runner gets trapped in a high-orbit corporate station conspiracy.</p>
+              <button onclick="triggerToast('Reminder set for Cyberpunk: Phantom Echo!')" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-2">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                <span>Notify Me</span>
+              </button>
+            </div>
+
+            <div class="rounded-3xl overflow-hidden bg-neutral-900 border border-white/10 p-5 space-y-4">
+              <div class="aspect-video rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600" class="w-full h-full object-cover" />
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-amber-500 text-[10px] font-bold text-black">APRIL 02</span>
+              </div>
+              <h3 class="text-lg font-bold text-white">Chronicles of Eldoria</h3>
+              <p class="text-xs text-neutral-400">The ancient crown falls into the hands of an outcast sorceress across the scorched lands.</p>
+              <button onclick="triggerToast('Reminder set for Chronicles of Eldoria!')" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-2">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                <span>Notify Me</span>
+              </button>
+            </div>
+
+            <div class="rounded-3xl overflow-hidden bg-neutral-900 border border-white/10 p-5 space-y-4">
+              <div class="aspect-video rounded-2xl overflow-hidden relative">
+                <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600" class="w-full h-full object-cover" />
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-purple-500 text-[10px] font-bold text-white">MAY 20</span>
+              </div>
+              <h3 class="text-lg font-bold text-white">Quantum Void</h3>
+              <p class="text-xs text-neutral-400">Deep space exploration vessel encounters a tear in space-time that bends physics.</p>
+              <button onclick="triggerToast('Reminder set for Quantum Void!')" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-2">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                <span>Notify Me</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDiscoveryPage() {
+      const container = document.getElementById('dynamicPageContent');
+      const genres = ['Sci-Fi', 'Crime Thriller', 'Dark Fantasy', 'Horror', 'Documentary', 'Anime & Animation', 'Action & Adventure', 'Comedy'];
+      let chips = genres.map(g => `<button onclick="triggerToast('Filtered by genre: ${g}')" class="px-4 py-2 rounded-2xl bg-white/5 hover:bg-brand-red border border-white/10 text-xs font-semibold text-white transition-all">${g}</button>`).join('');
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex items-center gap-2 flex-wrap pb-2">
+            ${chips}
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-red-900/60 to-black border border-white/10 cursor-pointer hover:scale-105 transition-all" onclick="handleMovieAction('stranger-things')">
+              <span class="text-xs font-bold text-brand-red">TRENDING #1</span>
+              <h4 class="text-base font-bold text-white mt-2">Sci-Fi Phenomena</h4>
+              <p class="text-[11px] text-neutral-300 mt-1">24 Titles available in 4K Spatial</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-900/60 to-black border border-white/10 cursor-pointer hover:scale-105 transition-all" onclick="handleMovieAction('lupin')">
+              <span class="text-xs font-bold text-purple-400">CRITICS PICK</span>
+              <h4 class="text-base font-bold text-white mt-2">Heist & Mysteries</h4>
+              <p class="text-[11px] text-neutral-300 mt-1">18 Award-winning series</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-900/60 to-black border border-white/10 cursor-pointer hover:scale-105 transition-all" onclick="handleMovieAction('the-witcher')">
+              <span class="text-xs font-bold text-emerald-400">EPIC SAGAS</span>
+              <h4 class="text-base font-bold text-white mt-2">Dark Realms</h4>
+              <p class="text-[11px] text-neutral-300 mt-1">Immersive worldbuilding</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-900/60 to-black border border-white/10 cursor-pointer hover:scale-105 transition-all" onclick="handleMovieAction('oppenheimer')">
+              <span class="text-xs font-bold text-amber-400">ACADEMY AWARDS</span>
+              <h4 class="text-base font-bold text-white mt-2">Masterpiece Cinema</h4>
+              <p class="text-[11px] text-neutral-300 mt-1">Uncompressed audio mix</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFriendsPage() {
+      const container = document.getElementById('dynamicPageContent');
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="p-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">Friends Live Cinema Activity</h3>
+              <p class="text-xs text-neutral-400">See what your circle is streaming in real-time</p>
+            </div>
+            <button onclick="triggerToast('Friend invite link copied!')" class="px-4 py-2 rounded-xl bg-brand-red text-white text-xs font-bold flex items-center gap-2">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>Invite Friend</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80" class="w-12 h-12 rounded-full object-cover" />
+                  <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-black"></span>
+                </div>
+                <div>
+                  <h4 class="text-sm font-bold text-white">Sarah Chen</h4>
+                  <p class="text-xs text-brand-red flex items-center gap-1">
+                    <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                    <span>Watching Wednesday S1:E4</span>
+                  </p>
+                </div>
+              </div>
+              <button onclick="handleMovieAction('wednesday')" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-brand-red text-white text-xs font-semibold">Join Stream</button>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80" class="w-12 h-12 rounded-full object-cover" />
+                  <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-black"></span>
+                </div>
+                <div>
+                  <h4 class="text-sm font-bold text-white">Marcus Vance</h4>
+                  <p class="text-xs text-brand-red flex items-center gap-1">
+                    <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                    <span>Watching Rebel Moon</span>
+                  </p>
+                </div>
+              </div>
+              <button onclick="handleMovieAction('rebel-moon')" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-brand-red text-white text-xs font-semibold">Join Stream</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPartiesPage() {
+      const container = document.getElementById('dynamicPageContent');
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="p-8 rounded-3xl bg-gradient-to-r from-purple-950/60 to-black border border-white/10 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-purple-600/30 text-purple-400 mx-auto flex items-center justify-center">
+              <i data-lucide="clapperboard" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Host a Vision Watch Party</h2>
+            <p class="text-xs text-neutral-300 max-w-md mx-auto">
+              Synchronize video playback with friends anywhere in the world with spatial voice chat and synchronized reactions.
+            </p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+              <button onclick="triggerToast('Party Room #789 created! Code copied.'); handleDirectLinkAction();" class="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-bold shadow-glow-red">
+                Create Room Now
+              </button>
+              <button onclick="triggerToast('Enter 6-digit party code to join')" class="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold">
+                Join with Code
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMediaPage() {
+      const container = document.getElementById('dynamicPageContent');
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-white">Stranger Things: Official Synthwave OST</h4>
+                <p class="text-xs text-neutral-400 mt-1">Lossless Spatial Dolby Atmos Mix</p>
+              </div>
+              <button onclick="triggerToast('Streaming Soundtrack...')" class="p-3 rounded-full bg-brand-red text-white">
+                <i data-lucide="music" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-white">Oppenheimer: Can You Hear The Music</h4>
+                <p class="text-xs text-neutral-400 mt-1">Ludwig Göransson Original Master</p>
+              </div>
+              <button onclick="triggerToast('Streaming Soundtrack...')" class="p-3 rounded-full bg-brand-red text-white">
+                <i data-lucide="music" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettingsPage() {
+      const container = document.getElementById('dynamicPageContent');
+      container.innerHTML = `
+        <div class="max-w-2xl space-y-6">
+          <div class="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+            <h3 class="text-lg font-bold text-white">Streaming & Audio Preferences</h3>
+            
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-sm font-semibold text-white">Spatial Audio Rendering</div>
+                <div class="text-xs text-neutral-400">Head-tracked binaural acoustics for headphones</div>
+              </div>
+              <input type="checkbox" checked class="w-5 h-5 accent-brand-red rounded cursor-pointer" onchange="triggerToast('Spatial Audio setting updated')" />
+            </div>
+
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div>
+                <div class="text-sm font-semibold text-white">Default Video Quality</div>
+                <div class="text-xs text-neutral-400">Ultra High Definition (4K HDR 60fps)</div>
+              </div>
+              <select class="bg-black/80 text-xs text-white border border-white/10 rounded-lg px-3 py-1.5">
+                <option>4K Ultra HD (Dolby Vision)</option>
+                <option>1080p Full HD</option>
+                <option>Data Saver (720p)</option>
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between py-2">
+              <div>
+                <div class="text-sm font-semibold text-white">Direct Stream Monetization VIP</div>
+                <div class="text-xs text-neutral-400">Support platform bandwidth via sponsored network</div>
+              </div>
+              <button onclick="handleDirectLinkAction()" class="px-3 py-1.5 rounded-lg bg-brand-red text-white text-xs font-bold">
+                Activate VIP
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 7. TOAST NOTIFICATION SYSTEM
+    // ==========================================
+    function triggerToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = "px-4 py-3 rounded-2xl glass-panel border border-white/20 text-white text-xs font-medium flex items-center gap-3 shadow-2xl pointer-events-auto transition-all transform duration-300 translate-y-2 opacity-0";
+      toast.innerHTML = `
+        <div class="w-5 h-5 rounded-full bg-brand-red flex items-center justify-center shrink-0">
+          <i data-lucide="check" class="w-3 h-3 text-white"></i>
+        </div>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      // Auto dismiss after 3 seconds
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function toggleNotificationPopover() {
+      const popover = document.getElementById('notificationPopover');
+      popover.classList.toggle('hidden');
+    }
+
+    // Watchlist Management
+    function toggleWatchlist(movieId, title) {
+      if (userWatchlist.includes(movieId)) {
+        userWatchlist = userWatchlist.filter(id => id !== movieId);
+        triggerToast(`Removed '${title}' from Watch List`);
+      } else {
+        userWatchlist.push(movieId);
+        triggerToast(`Added '${title}' to Watch List!`);
+      }
+      document.getElementById('watchlistCountBadge').innerText = userWatchlist.length;
+    }
+
+    function removeFromWatchlist(movieId) {
+      userWatchlist = userWatchlist.filter(id => id !== movieId);
+      renderWatchlistPage();
+      triggerToast(`Item removed from Watch List`);
+      document.getElementById('watchlistCountBadge').innerText = userWatchlist.length;
+    }
+
+    function filterContent(type) {
+      triggerToast(`Showing catalogue: ${type.toUpperCase()}`);
+    }
+
+    // Mobile Menu Toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      const navMenu = document.getElementById('navMenu');
+      navMenu.classList.toggle('hidden');
+    });
+
+    // Close notifications when clicking outside
+    document.addEventListener('click', (e) => {
+      const popover = document.getElementById('notificationPopover');
+      if (!popover.contains(e.target) && !e.target.closest('button[onclick*="toggleNotificationPopover"]')) {
+        popover.classList.add('hidden');
+      }
+    });
+
+    // Initialize Lucide Icons on first load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
